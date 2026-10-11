@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "license-lint"
+version = "0.1.0"
+description = "Offline license checks for software repositories: LICENSE detection, manifest mismatch, denied licenses."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = []
+
+[project.scripts]
+license-lint = "license_lint.cli:main"
