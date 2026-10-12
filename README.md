@@ -1,11 +1,22 @@
 # license-lint
 
+[![CI](https://github.com/GhosTnever-lkm/license-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/GhosTnever-lkm/license-lint/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/GhosTnever-lkm/license-lint)](https://github.com/GhosTnever-lkm/license-lint/releases/latest)
+
 Офлайн-проверка лицензий репозитория: находит файл `LICENSE`, определяет его тип по тексту, сверяет с лицензией, указанной в `pyproject.toml`, `Cargo.toml` или `package.json`, и может запрещать выбранные лицензии. Без зависимостей, Python 3.10+.
 
 ## Быстрый старт
 
+Скачайте wheel из [последнего релиза](https://github.com/GhosTnever-lkm/license-lint/releases/latest) и установите:
+
 ```bash
-python -m license_lint /path/to/repo
+python -m pip install license_lint-0.1.2-py3-none-any.whl
+```
+
+Запустите проверку:
+
+```bash
+license-lint /path/to/repo
 python -m license_lint . --deny GPL-3.0-only --json
 python -m license_lint . --strict   # предупреждения тоже дают код 1
 ```
@@ -21,6 +32,8 @@ OK: no findings
 ```
 
 ## Проверки
+
+`pyproject.toml` читается из таблицы `[project]`, `Cargo.toml` — из `[package]`, а `package.json` поддерживает строку `license` и совместимый объект с полем `type`.
 
 | Код | Уровень | Смысл |
 | --- | --- | --- |
@@ -44,6 +57,10 @@ OK: no findings
 ```bash
 python -m unittest discover -s tests -t .
 ```
+
+## Поддержка и Pro-версия
+
+Базовая версия остаётся бесплатной; отдельный Pro-выпуск пока не опубликован. Нужна проверка дополнительных манифестов или собственных правил? [Опишите сценарий в запросе](https://github.com/GhosTnever-lkm/license-lint/issues/new).
 
 ## Лицензия
 

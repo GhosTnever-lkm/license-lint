@@ -43,10 +43,34 @@ class ScanTests(unittest.TestCase):
         self.assertEqual(report.findings[0].code, "LICENSE_MISSING")
 
     def test_matching_manifest_has_no_errors(self):
-        repo = make_repo({"LICENSE": MIT_TEXT, "pyproject.toml": 'license = "MIT"\n'})
+        repo = make_repo({"LICENSE": MIT_TEXT, "pyproject.toml": '[project]\nlicense = "MIT"\n'})
         report = scan(repo)
         self.assertFalse(report.has_errors)
         self.assertEqual(report.declared, {"pyproject.toml": "MIT"})
+
+    def test_pyproject_license_is_read_from_project_section_and_single_quotes(self):
+        text = "[tool.example]\nlicense = 'Apache-2.0'\n[project]\nlicense = 'MIT'\n"
+        report = scan(make_repo({"LICENSE": MIT_TEXT, "pyproject.toml": text}))
+        self.assertEqual(report.declared, {"pyproject.toml": "MIT"})
+        self.assertFalse(report.has_errors)
+
+    def test_pyproject_inline_license_text(self):
+        text = '[project]\nlicense = { text = "MIT" }\n'
+        report = scan(make_repo({"LICENSE": MIT_TEXT, "pyproject.toml": text}))
+        self.assertEqual(report.declared, {"pyproject.toml": "MIT"})
+        self.assertFalse(report.has_errors)
+
+    def test_cargo_license_is_read_from_package_section(self):
+        text = "[workspace]\nlicense = 'Apache-2.0'\n[package]\nlicense = 'MIT'\n"
+        report = scan(make_repo({"LICENSE": MIT_TEXT, "Cargo.toml": text}))
+        self.assertEqual(report.declared, {"Cargo.toml": "MIT"})
+        self.assertFalse(report.has_errors)
+
+    def test_npm_legacy_license_object(self):
+        package = json.dumps({"license": {"type": "MIT", "url": "https://example.test/license"}})
+        report = scan(make_repo({"LICENSE": MIT_TEXT, "package.json": package}))
+        self.assertEqual(report.declared, {"package.json": "MIT"})
+        self.assertFalse(report.has_errors)
 
     def test_mismatch_is_error(self):
         repo = make_repo({"LICENSE": MIT_TEXT, "package.json": json.dumps({"license": "Apache 2.0"})})
@@ -61,6 +85,10 @@ class ScanTests(unittest.TestCase):
 
     def test_denied_license_is_error(self):
         report = scan(make_repo({"LICENSE": GPL3_TEXT}), deny={"GPL-3.0-only"})
+        self.assertIn("DENIED_LICENSE", [f.code for f in report.findings])
+
+    def test_deny_alias_is_normalized(self):
+        report = scan(make_repo({"LICENSE": MIT_TEXT}), deny={"mit"})
         self.assertIn("DENIED_LICENSE", [f.code for f in report.findings])
 
     def test_copyleft_is_info_only(self):
@@ -101,6 +129,15 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 1)
         code, _ = self.run_cli([str(repo)])
         self.assertEqual(code, 0)
+
+    def test_version_matches_package_metadata(self):
+        from license_lint import __version__
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit) as raised:
+            main(["--version"])
+        self.assertEqual(raised.exception.code, 0)
+        self.assertEqual(buf.getvalue().strip(), __version__)
 
 
 if __name__ == "__main__":

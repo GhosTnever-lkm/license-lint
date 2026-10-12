@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-13
+
+### Added
+
+- Read TOML license declarations only from the relevant `[project]` or `[package]` table.
+- Support single-quoted TOML strings, inline text values, and legacy npm `{type: ...}` license objects.
+- Normalize `--deny` aliases such as `mit` to SPDX identifiers.
+- Add CLI version regression coverage, release badges, install guidance, and tagged wheel/sdist releases with SHA-256 checksums.
+
+### Fixed
+
+- Avoid false license mismatches caused by unrelated TOML tables or case variants in `--deny`.
+
 ## [0.1.1] - 2026-10-11
 
 ### Added
@@ -20,5 +33,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Manifest checks for `pyproject.toml`, `Cargo.toml` and `package.json`.
 - `--deny` list, `--json` output and `--strict` mode.
 
-[Unreleased]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/GhosTnever-lkm/license-lint/releases/tag/v0.1.0

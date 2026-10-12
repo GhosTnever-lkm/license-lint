@@ -45,14 +45,37 @@ def _read_small(path: Path) -> str | None:
         return None
 
 
+def _toml_section(text: str, section: str) -> str:
+    """Return the source lines belonging to one TOML table."""
+    current = None
+    selected: list[str] = []
+    for line in text.splitlines():
+        header = re.match(r"^\s*\[([^\]]+)\]\s*(?:#.*)?$", line)
+        if header:
+            current = header.group(1).strip()
+        elif current == section:
+            selected.append(line)
+    return "\n".join(selected)
+
+
+def _toml_string_value(text: str, key: str) -> str | None:
+    match = re.search(rf"^\s*{re.escape(key)}\s*=\s*(.+?)\s*(?:#.*)?$", text, re.MULTILINE)
+    if not match:
+        return None
+    value = match.group(1).strip()
+    direct = re.fullmatch(r"(['\"])(.*?)\1", value)
+    if direct:
+        return direct.group(2)
+    inline_text = re.search(r"\btext\s*=\s*(['\"])(.*?)\1", value)
+    return inline_text.group(2) if inline_text else None
+
+
 def _declared_from_pyproject(text: str) -> str | None:
-    match = re.search(r'^\s*license\s*=\s*"([^"]+)"', text, re.MULTILINE)
-    return match.group(1) if match else None
+    return _toml_string_value(_toml_section(text, "project"), "license")
 
 
 def _declared_from_cargo(text: str) -> str | None:
-    match = re.search(r'^\s*license\s*=\s*"([^"]+)"', text, re.MULTILINE)
-    return match.group(1) if match else None
+    return _toml_string_value(_toml_section(text, "package"), "license")
 
 
 def _declared_from_package_json(text: str) -> str | None:
@@ -61,6 +84,8 @@ def _declared_from_package_json(text: str) -> str | None:
     except json.JSONDecodeError:
         return None
     value = data.get("license") if isinstance(data, dict) else None
+    if isinstance(value, dict):
+        value = value.get("type")
     return value if isinstance(value, str) else None
 
 
@@ -117,7 +142,7 @@ def scan(root: str | Path, deny: set[str] | None = None) -> Report:
                 )
 
     if deny:
-        denied = {d.strip() for d in deny}
+        denied = {normalize_declared(d) or d.strip() for d in deny}
         for label, spdx in [(report.license_file or "LICENSE", report.detected_license)] + list(report.declared.items()):
             if spdx and spdx in denied:
                 report.add("error", "DENIED_LICENSE", f"{label} uses denied license {spdx}")
