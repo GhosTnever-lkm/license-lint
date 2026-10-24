@@ -74,6 +74,16 @@ def _declared_from_pyproject(text: str) -> str | None:
     return _toml_string_value(_toml_section(text, "project"), "license")
 
 
+def _pyproject_license_file(text: str) -> str | None:
+    """Return the legacy PEP 621 license table's file path, if present."""
+    section = _toml_section(text, "project")
+    match = re.search(r"^\s*license\s*=\s*(\{.*?\})\s*(?:#.*)?$", section, re.MULTILINE)
+    if not match:
+        return None
+    file_match = re.search(r"\bfile\s*=\s*(['\"])(.*?)\1", match.group(1))
+    return file_match.group(2) if file_match else None
+
+
 def _declared_from_cargo(text: str) -> str | None:
     return _toml_string_value(_toml_section(text, "package"), "license")
 
@@ -125,6 +135,25 @@ def scan(root: str | Path, deny: set[str] | None = None) -> Report:
         text = _read_small(path)
         if text is None:
             continue
+        if manifest == "pyproject.toml":
+            license_file = _pyproject_license_file(text)
+            if license_file is not None:
+                candidate = (base / license_file).resolve()
+                try:
+                    candidate.relative_to(base.resolve())
+                except ValueError:
+                    report.add("warning", "MANIFEST_LICENSE_FILE_UNSAFE", "pyproject.toml license file points outside the repository")
+                    continue
+                if not candidate.is_file():
+                    report.add("warning", "MANIFEST_LICENSE_FILE_MISSING", f"pyproject.toml license file {license_file!r} does not exist")
+                    continue
+                license_text = _read_small(candidate)
+                declared_license = detect_license_text(license_text) if license_text is not None else None
+                if declared_license is None:
+                    report.add("warning", "MANIFEST_LICENSE_FILE_UNRECOGNIZED", f"pyproject.toml license file {license_file!r} is too large, unreadable, or unrecognized")
+                    continue
+                report.declared[manifest] = declared_license
+                continue
         raw = reader(text)
         if raw is None:
             report.add("warning", "MANIFEST_NO_LICENSE", f"{manifest} declares no license field")
