@@ -10,7 +10,7 @@
 Скачайте wheel из [последнего релиза](https://github.com/GhosTnever-lkm/license-lint/releases/latest) и установите:
 
 ```bash
-python -m pip install license_lint-0.1.2-py3-none-any.whl
+python -m pip install license_lint-0.1.3-py3-none-any.whl
 ```
 
 Запустите проверку:
@@ -33,7 +33,7 @@ OK: no findings
 
 ## Проверки
 
-`pyproject.toml` читается из таблицы `[project]`, `Cargo.toml` — из `[package]`, а `package.json` поддерживает строку `license` и совместимый объект с полем `type`.
+`pyproject.toml` читается из таблицы `[project]` и поддерживает SPDX-строку, текстовую форму и устаревшую форму `license = { file = "LICENSE" }`. Для `file` проверяется содержимое указанного файла внутри репозитория. `Cargo.toml` читается из `[package]`, а `package.json` поддерживает строку `license` и совместимый объект с полем `type`.
 
 | Код | Уровень | Смысл |
 | --- | --- | --- |

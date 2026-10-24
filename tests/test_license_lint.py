@@ -17,6 +17,7 @@ APACHE_TEXT = "Apache License\nVersion 2.0, January 2004"
 def make_repo(files: dict[str, str]) -> Path:
     tmp = Path(tempfile.mkdtemp())
     for name, content in files.items():
+        (tmp / name).parent.mkdir(parents=True, exist_ok=True)
         (tmp / name).write_text(content, encoding="utf-8")
     return tmp
 
@@ -59,6 +60,42 @@ class ScanTests(unittest.TestCase):
         report = scan(make_repo({"LICENSE": MIT_TEXT, "pyproject.toml": text}))
         self.assertEqual(report.declared, {"pyproject.toml": "MIT"})
         self.assertFalse(report.has_errors)
+
+    def test_pyproject_legacy_license_file_table(self):
+        repo = make_repo({
+            "LICENSE": MIT_TEXT,
+            "legal/MIT.txt": MIT_TEXT,
+            "pyproject.toml": '[project]\nlicense = { file = "legal/MIT.txt" }\n',
+        })
+        report = scan(repo)
+        self.assertEqual(report.declared, {"pyproject.toml": "MIT"})
+        self.assertFalse(report.has_errors)
+
+    def test_pyproject_legacy_license_file_mismatch(self):
+        repo = make_repo({
+            "LICENSE": MIT_TEXT,
+            "APACHE.txt": APACHE_TEXT,
+            "pyproject.toml": "[project]\nlicense = { file = 'APACHE.txt' }\n",
+        })
+        report = scan(repo)
+        self.assertEqual(report.declared, {"pyproject.toml": "Apache-2.0"})
+        self.assertIn("LICENSE_MISMATCH", [finding.code for finding in report.findings])
+
+    def test_pyproject_legacy_license_file_cannot_escape_repository(self):
+        repo = make_repo({
+            "LICENSE": MIT_TEXT,
+            "pyproject.toml": "[project]\nlicense = { file = '../outside.txt' }\n",
+        })
+        report = scan(repo)
+        self.assertIn("MANIFEST_LICENSE_FILE_UNSAFE", [finding.code for finding in report.findings])
+
+    def test_pyproject_legacy_license_file_missing_is_reported(self):
+        repo = make_repo({
+            "LICENSE": MIT_TEXT,
+            "pyproject.toml": '[project]\nlicense = { file = "missing.txt" }\n',
+        })
+        report = scan(repo)
+        self.assertIn("MANIFEST_LICENSE_FILE_MISSING", [finding.code for finding in report.findings])
 
     def test_cargo_license_is_read_from_package_section(self):
         text = "[workspace]\nlicense = 'Apache-2.0'\n[package]\nlicense = 'MIT'\n"

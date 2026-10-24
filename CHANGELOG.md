@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-25
+
+### Added
+
+- Read legacy PEP 621 `license = { file = "..." }` declarations from repository-local files and compare their detected license with `LICENSE`.
+- Report missing, unsafe, oversized, unreadable, or unrecognized legacy license files explicitly.
+- Add regression tests for matching, mismatching, missing, and repository-escaping license file paths.
+
 ## [0.1.2] - 2026-10-13
 
 ### Added
@@ -33,7 +41,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Manifest checks for `pyproject.toml`, `Cargo.toml` and `package.json`.
 - `--deny` list, `--json` output and `--strict` mode.
 
-[Unreleased]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/GhosTnever-lkm/license-lint/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/GhosTnever-lkm/license-lint/releases/tag/v0.1.0
