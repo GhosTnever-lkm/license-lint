@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Update the CI examples and workflows to current, commit-pinned GitHub Actions.
+
 ## [0.1.3] - 2026-10-25
 
 ### Added

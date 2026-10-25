@@ -177,5 +177,21 @@ class CliTests(unittest.TestCase):
         self.assertEqual(buf.getvalue().strip(), __version__)
 
 
+class DocumentationTests(unittest.TestCase):
+    def test_readme_actions_example_matches_pinned_project_workflows(self):
+        root = Path(__file__).resolve().parents[1]
+        readme = (root / "README.md").read_text(encoding="utf-8")
+        expected_actions = (
+            "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1",
+            "actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0",
+        )
+        for workflow in ("ci.yml", "release.yml"):
+            contents = (root / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
+            for action in expected_actions:
+                with self.subTest(workflow=workflow, action=action):
+                    self.assertIn(action, readme)
+                    self.assertIn(action, contents)
+
+
 if __name__ == "__main__":
     unittest.main()
